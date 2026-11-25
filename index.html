@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MineHub | ML Tools</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090811;color:#eee;font-family:Inter,Arial,sans-serif}
+button,input,select{font:inherit}
+.app{display:flex;min-height:100vh}
+.sidebar{width:225px;background:#100e1b;border-right:1px solid #292239;padding:25px 16px}
+.logo{font-size:24px;font-weight:900;color:#a78bfa;margin-bottom:35px}
+.logo span{color:white}
+.nav{display:block;width:100%;padding:13px;margin:6px 0;border:0;border-radius:9px;background:transparent;color:#aaa;text-align:left;cursor:pointer}
+.nav:hover,.nav.active{background:#29203f;color:#c4a7ff}
+.main{flex:1;padding:30px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.top h1{font-size:25px;margin:0}
+.status{color:#a78bfa;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.card{background:#141220;border:1px solid #29243b;border-radius:13px;padding:20px;margin-bottom:18px}
+.stat{font-size:27px;font-weight:bold;margin-top:10px}
+.muted{color:#999;font-size:13px}
+h2{font-size:17px;margin:0 0 17px}
+h3{font-size:14px;color:#aaa;font-weight:500}
+input,select{background:#0d0b16;color:white;border:1px solid #39304e;border-radius:8px;padding:12px;width:100%;outline:none;margin:7px 0 13px}
+input:focus{border-color:#a78bfa}
+button.primary{background:#8053dc;color:white;border:0;border-radius:8px;padding:12px 17px;cursor:pointer;font-weight:bold}
+button.primary:hover{background:#986df0}
+button.secondary{background:#29243b;color:white;border:1px solid #493b65;border-radius:8px;padding:11px;cursor:pointer}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:13px 9px;border-bottom:1px solid #29243b}
+th{color:#a78bfa}
+.table-wrap{overflow-x:auto}
+.result{padding:13px;background:#0e0c17;border:1px solid #332b46;border-radius:8px;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.tag{color:#a78bfa}
+.hidden{display:none}
+@media(max-width:700px){
+.app{display:block}.sidebar{width:100%;padding:12px;display:flex;gap:5px;overflow-x:auto}
+.logo{display:none}.nav{width:auto;white-space:nowrap;font-size:12px;margin:0;padding:11px}
+.main{padding:16px}.grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="logo">MINE<span>HUB.</span></div>
+<button class="nav active" data-page="dashboard">⌂ Dashboard</button>
+<button class="nav" data-page="generator">✦ Generator</button>
+<button class="nav" data-page="checker">◉ Account Checker</button>
+<button class="nav" data-page="accounts">▤ Accounts</button>
+<button class="nav" data-page="settings">⚙ Settings</button>
+</aside>
+
+<main class="main">
+<header class="top">
+<div>
+<h1 id="pageTitle">Dashboard</h1>
+<div class="muted">Mobile Legends test account tools</div>
+</div>
+<div class="status">● LOCAL DEMO</div>
+</header>
+
+<section class="panel active" id="dashboard">
+<div class="grid">
+<div class="card"><div class="muted">Generated Records</div><div class="stat" id="total">0</div></div>
+<div class="card"><div class="muted">Valid Formats</div><div class="stat" id="valid">0</div></div>
+<div class="card"><div class="muted">Invalid Formats</div><div class="stat" id="invalid">0</div></div>
+</div>
+<div class="card">
+<h2>Welcome to MineHub</h2>
+<p class="muted">Generate fictional ML account records, check their format, and manage your local demo database.</p>
+<button class="primary" onclick="navigate('generator')">Open Generator →</button>
+</div>
+<div class="card">
+<h2>Recent Activity</h2>
+<div id="activity" class="muted">No activity yet.</div>
+</div>
+</section>
+
+<section class="panel" id="generator">
+<div class="card">
+<h2>Account Generator</h2>
+<p class="muted">Create fictional test records for interface testing.</p>
+<label class="muted">Number of records</label>
+<select id="quantity">
+<option value="1">1 Record</option>
+<option value="5">5 Records</option>
+<option value="10">10 Records</option>
+<option value="25">25 Records</option>
+<option value="50">50 Records</option>
+</select>
+<button class="primary" onclick="generate()">Generate Records</button>
+<div id="genResult" class="result hidden"></div>
+</div>
+</section>
+
+<section class="panel" id="checker">
+<div class="card">
+<h2>Account Format Checker</h2>
+<p class="muted">Checks fictional record IDs against the local demo database. Does not connect to ML servers.</p>
+<label class="muted">Enter demo account ID</label>
+<input id="checkID" placeholder="Example: 12345678">
+<button class="primary" onclick="checkAccount()">Check Record</button>
+<div id="checkResult" class="result hidden"></div>
+</div>
+</section>
+
+<section class="panel" id="accounts">
+<div class="card">
+<div class="row">
+<h2>Account Database</h2>
+<button class="secondary" onclick="exportCSV()">Export CSV ↓</button>
+<button class="secondary" onclick="clearRecords()">Clear Database</button>
+</div>
+<input id="search" placeholder="Search records..." oninput="renderAccounts()">
+<div class="table-wrap">
+<table>
+<thead><tr><th>Demo ID</th><th>Server</th><th>Status</th><th>Action</th></tr></thead>
+<tbody id="accountRows"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section class="panel" id="settings">
+<div class="card">
+<h2>Settings</h2>
+<p class="muted">MineHub local demo configuration</p>
+<p>Storage: Browser localStorage</p>
+<p>Network connection: Disabled</p>
+<p>Account generation: Fictional records</p>
+<p>Version: 1.0.0</p>
+<button class="secondary" onclick="refresh()">Refresh Dashboard</button>
+</div>
+</section>
+</main>
+</div>
+
+<script>
+let records=JSON.parse(localStorage.getItem('minehub_records')||'[]');
+
+function save(){
+ localStorage.setItem('minehub_records',JSON.stringify(records));
+ refresh();
+}
+
+function navigate(page){
+ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+ document.querySelectorAll('.nav').forEach(b=>b.classList.remove('active'));
+ document.getElementById(page).classList.add('active');
+ document.querySelector(`[data-page="${page}"]`).classList.add('active');
+ document.getElementById('pageTitle').textContent=
+ page.charAt(0).toUpperCase()+page.slice(1);
+ if(page==='accounts')renderAccounts();
+}
+
+document.querySelectorAll('.nav').forEach(button=>{
+ button.addEventListener('click',()=>navigate(button.dataset.page));
+});
+
+function generate(){
+ const count=Number(document.getElementById('quantity').value);
+ const created=[];
+
+ for(let i=0;i<count;i++){
+  let id;
+  do{
+   id=String(Math.floor(10000000+Math.random()*90000000));
+  }while(records.some(r=>r.id===id));
+
+  const record={
+   id,
+   server:String(Math.floor(1000+Math.random()*9000)),
+   status:'DEMO',
+   created:new Date().toISOString()
+  };
+  records.push(record);
+  created.push(record);
+ }
+
+ save();
+ const output=created.map(r=>`ID: ${r.id} | Server: ${r.server} | DEMO`);
+ const box=document.getElementById('genResult');
+ box.textContent=output.join('\n');
+ box.classList.remove('hidden');
+ document.getElementById('activity').textContent=
+ `Generated ${count} fictional records just now.`;
+}
+
+function checkAccount(){
+ const id=document.getElementById('checkID').value.trim();
+ const box=document.getElementById('checkResult');
+ box.classList.remove('hidden');
+
+ if(!/^\d{8}$/.test(id)){
+  box.textContent='INVALID FORMAT\nExpected an 8-digit demo ID.';
+  return;
+ }
+
+ const found=records.find(r=>r.id===id);
+
+ box.textContent=found
+ ? `RECORD FOUND\nID: ${found.id}\nServer: ${found.server}\nStatus: DEMO RECORD\nThis is not a verified game account.`
+ : 'FORMAT VALID\nNo matching record in your local demo database.';
+}
+
+function renderAccounts(){
+ const query=document.getElementById('search').value.toLowerCase();
+ const filtered=records.filter(r=>r.id.includes(query));
+ const tbody=document.getElementById('accountRows');
+
+ tbody.innerHTML='';
+ filtered.forEach(r=>{
+  const tr=document.createElement('tr');
+  [r.id,r.server,r.status].forEach(value=>{
+   const td=document.createElement('td');
+   td.textContent=value;
+   tr.appendChild(td);
+  });
+  const td=document.createElement('td');
+  const button=document.createElement('button');
+  button.className='secondary';
+  button.textContent='Delete';
+  button.onclick=()=>{
+   records=records.filter(x=>x.id!==r.id);
+   save();
+   renderAccounts();
+  };
+  td.appendChild(button);
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+ });
+}
+
+function exportCSV(){
+ const rows=[['ID','Server','Status','Created'],
+ ...records.map(r=>[r.id,r.server,r.status,r.created])];
+ const csv=rows.map(row=>row.join(',')).join('\n');
+ const blob=new Blob([csv],{type:'text/csv'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download='minehub-demo-accounts.csv';
+ a.click();
+ URL.revokeObjectURL(url);
+}
+
+function clearRecords(){
+ if(!confirm('Delete all local demo records?'))return;
+ records=[];
+ save();
+ renderAccounts();
+}
+
+function refresh(){
+ document.getElementById('total').textContent=records.length;
+ document.getElementById('valid').textContent=
+ records.filter(r=>/^\d{8}$/.test(r.id)).length;
+ document.getElementById('invalid').textContent=
+ records.filter(r=>!/^\d{8}$/.test(r.id)).length;
+}
+
+refresh();
+</script>
+</body>
+</html>
